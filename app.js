@@ -9,11 +9,11 @@ app.use(express.json());
 app.use(morgan('tiny'));
 
 const productSchema = mongoose.Schema({
-    name: String,
+    name: String , 
     image: String,
     countInStock: {
         type: Number,
-        required: true,
+        required: true, 
     }
 })
 
