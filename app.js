@@ -1,42 +1,47 @@
-const express = require('express');
+const express = require("express"); //famous library to host server from node js
 const app = express();
-const morgan = require('morgan'); //this library is middle ware library 
-const mongoose = require('mongoose');
-const cors = require('cors');
-require('dotenv/config');
+const morgan = require("morgan"); //this library is middle ware library 
+const mongoose = require("mongoose");
+const cors = require("cors"); //confusion 1
+require("dotenv/config");
 
-app.use(cors());
-app.options('*', cors())  //some type of http request
+app.use(cors()); //confusion
+app.options("*", cors()); //some type of http request
 
+//middleware
+app.use(express.json());
+app.use(morgan("tiny"));  //confusion 2   what does this line means    
+
+//Routes
+const categoriesRoutes = require("./routes/categories");
+const productsRoutes = require("./routes/products");
+const usersRoutes = require("./routes/users");
+const ordersRoutes = require("./routes/orders");
 
 const api = process.env.API_URL;
-const productRouter = require('./routers/products');
 
+app.use(`${api}/categories`, categoriesRoutes);
+app.use(`${api}/products`, productsRoutes);
+app.use(`${api}/users`, usersRoutes);
+app.use(`${api}/orders`, ordersRoutes);
 
-//Middle Ware
-app.use(express.json());
-app.use(morgan('tiny'));
-
-//Routers
-app.use(`${api}/products`, productRouter)
-
-
+//productsRoutes => contains CRUD operation of all products
+//${api}/products => this is the route on web for accessing this api
 
 
 
 
-const Product = require('./models/product')
+//Database CONNECTION
+mongoose
+    .connect(process.env.CONNECTION_STRING)
+    .then(() => {
+        console.log("Database Connection is ready...");
+    })
+    .catch((err) => {
+        console.log(err);
+    });
 
-
-
-mongoose.connect(process.env.CONNECTION_STRING )
-.then(()=>{
-    console.log('Database Connection is ready...')
-})
-.catch((err)=>{
-    console.log(err); 
-})
-app.listen(3000, ()=>{
-
-    console.log("server is running at http://localhost:3000")
-})
+//Server
+app.listen(3000, () => {
+    console.log("server is running http://localhost:3000");
+});
