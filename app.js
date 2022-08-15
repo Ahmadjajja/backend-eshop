@@ -4,14 +4,19 @@ const morgan = require("morgan"); //this library is middle ware library
 const mongoose = require("mongoose");
 const cors = require("cors"); //confusion 1
 require("dotenv/config");
+const authJwt = require('./helpers/jwt');
+const errorHandler = require('./helpers/error-handler')
+
 
 app.use(cors()); //confusion
 app.options("*", cors()); //some type of http request
 
 //middleware
 app.use(express.json());
-app.use(morgan("tiny"));  //confusion 2   what does this line means    
-
+app.use(morgan("tiny"));  //confusion 2   what does this line means 
+app.use(authJwt());   // now our server is secured on base of token
+app.use(errorHandler);
+ 
 //Routes
 const categoriesRoutes = require("./routes/categories");
 const productsRoutes = require("./routes/products");
