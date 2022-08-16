@@ -8,6 +8,7 @@ const router = express.Router();
 // `/` => this route uses for connection of backend with frontend
 
 router.get(`/`, async (req, res) => {
+    console.log("product get request is running");
 
     //localhost:3000/api/v1/products?categories=2342342,234234
     let filter = {};
@@ -20,7 +21,7 @@ router.get(`/`, async (req, res) => {
     if (!productList) {
         res.status(500).json({ success: false })
     }
-    //if we not write this code, in case of error answer will be in html code instead of `success: false`
+    //if we not write above code, in case of error answer will be in html code instead of `success: false`
     res.send(productList);
 })
 
