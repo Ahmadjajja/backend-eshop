@@ -13,6 +13,7 @@ function authJwt() {   //protection function
             //regular expressions used here
             // very important concept in programming so must clear this concept 
             //little confused in this
+            {url: /\/public\/v1\/uploads(.*)/ , methods: ['GET', 'OPTIONS'] }, 
             {url: /\/api\/v1\/products(.*)/ , methods: ['GET', 'OPTIONS'] }, 
             {url: /\/api\/v1\/categories(.*)/ , methods: ['GET', 'OPTIONS'] }, 
             `${api}/users/login`,

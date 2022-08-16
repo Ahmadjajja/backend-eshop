@@ -15,6 +15,7 @@ app.options("*", cors()); //some type of http request
 app.use(express.json());
 app.use(morgan("tiny"));  //confusion 2   what does this line means 
 app.use(authJwt());   // now our server is secured on base of token
+app.use('/public/uploads', express.static(__dirname + '/public/uploads'));  //dirname returns root path of application 
 app.use(errorHandler);
  
 //Routes

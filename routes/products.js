@@ -3,6 +3,38 @@ const { Category } = require('../models/category')
 const express = require('express');  //for routing function we are using express library here
 const mongoose = require('mongoose');
 const router = express.Router();
+const multer = require('multer');
+
+
+const FILE_TYPE_MAP = {
+    'image/png': 'png',     //image/png => is MIME type
+    'image/jpeg': 'jpeg',
+    'image/jpg': 'jpg'
+}
+
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) { //cb stands for callback
+        const isValid = FILE_TYPE_MAP[file.mimetype];
+        let uploadError = new Error('invalid image type');
+
+        if (isValid) {
+            uploadError = null
+        }
+      cb(uploadError, 'public/uploads')
+    },
+    filename: function (req, file, cb) {
+      const fileName = file.originalname.split(' ').join('-');    //.replace(' ','-')
+      const extension = FILE_TYPE_MAP[file.mimetype]; 
+      cb(null, `${fileName} - ${Date.now()}.${extension}`)
+    }
+  })
+  
+  const uploadOptions = multer({ storage: storage })
+
+
+
+
 
 
 // `/` => this route uses for connection of backend with frontend
@@ -35,16 +67,20 @@ router.get(`/:id`, async (req, res) => {
     res.send(product);
 })
 
-router.post(`/`, async (req, res) => {
+router.post(`/`, uploadOptions.single('image'), async (req, res) => {
     const category = await Category.findById(req.body.category);
     if (!category) return res.status(400).send('Invalid Category')
+    
+    const file = req.file;
+    if (!file) return res.status(400).send('No image in the request')
 
-
+    const fileName = req.file.filename
+    const basePath = `${req.protocol}://${req.get('host')}/public/upload/`;
     let product = new Product({
         name: req.body.name,
         description: req.body.description,
         richDescription: req.body.richDescription,
-        image: req.body.image,
+        image: `${basePath}${fileName}`, //http://localhost:3000/public/upload/image-2323232
         brand: req.body.brand,
         price: req.body.price,
         category: req.body.category,
@@ -60,21 +96,35 @@ router.post(`/`, async (req, res) => {
     res.send(product);
 })
 
-router.put(`/:id`, async (req, res) => {
+router.put(`/:id`, uploadOptions.single('image'), async (req, res) => {
     if (!mongoose.isValidObjectId(req.params.id)) {
         return res.status(400).send('Invalid Product Id')
     }
     const category = await Category.findById(req.body.category);    //Here may be error
-    if (!category) return res.status(400).send('Invalid Category');
+    if (!category) return res.status(400).send('Invalid Category'); 
 
+    const product = await Product.findById(req.params.id);    //Here may be error
+    if (!product) return res.status(400).send('Invalid product'); 
 
-    const product = await Product.findByIdAndUpdate(
+    const file = req.file;
+    let imagepath;
+
+    if (file) {
+        
+    const fileName = req.file.filename
+    const basePath = `${req.protocol}://${req.get('host')}/public/upload/`;
+    imagepath = `${basePath}${fileName}`;
+    } else{
+        imagepath = product.image;
+    }
+
+    const updatedProduct = await Product.findByIdAndUpdate(
         req.params.id,
         {
             name: req.body.name,
             description: req.body.description,
             richDescription: req.body.richDescription,
-            image: req.body.image,
+            image: imagepath,
             brand: req.body.brand,
             price: req.body.price,
             category: req.body.category,
@@ -85,11 +135,11 @@ router.put(`/:id`, async (req, res) => {
         }, { new: true }
     )
 
-    if (!product) {
+    if (!updatedProduct) {
         res.status(500).json('The product cannot be updated')
     }
     //if we not write this code, in case of error answer will be in html code instead of `success: false`
-    res.send(product);
+    res.send(updatedProduct);
 })
 
 
@@ -140,5 +190,33 @@ router.get(`/get/featured/:count`, async (req, res) => {
     //if we not write this code, in case of error answer will be in html code instead of `success: false`
     res.send(productFeatured);
 })
+
+router.put('/gallery-images/:id', uploadOptions.array('images', 10), async (req, res) => {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+        return res.status(400).send('Invalid Product Id');
+    }
+    const files = req.files;
+    let imagesPaths = [];
+    const basePath = `${req.protocol}://${req.get('host')}/public/uploads/`;
+
+    if (files) {
+        files.map((file) => {
+            imagesPaths.push(`${basePath}${file.filename}`);
+        });
+    }
+
+    const product = await Product.findByIdAndUpdate(
+        req.params.id,
+        {
+            images: imagesPaths
+        },
+        { new: true }
+    );
+
+    if (!product) return res.status(500).send('the gallery cannot be updated!');
+
+    res.send(product);
+});
+
 
 module.exports = router;
