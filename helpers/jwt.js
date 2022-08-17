@@ -1,4 +1,4 @@
-const { expressjwt: expressJwt } = require('express-jwt');
+const { expressjwt: expressJwt } = require('express-jwt');  //difference here from tutor
 
 function authJwt() {   //protection function
     const secret = process.env.secret;
@@ -13,13 +13,14 @@ function authJwt() {   //protection function
             //regular expressions used here
             // very important concept in programming so must clear this concept 
             //little confused in this
-            {url: /\/public\/v1\/uploads(.*)/ , methods: ['GET', 'OPTIONS'] }, 
+            {url: /\/public\/uploads(.*)/ , methods: ['GET', 'OPTIONS'] }, 
             {url: /\/api\/v1\/products(.*)/ , methods: ['GET', 'OPTIONS'] }, 
             {url: /\/api\/v1\/categories(.*)/ , methods: ['GET', 'OPTIONS'] }, 
+            {url: /\/api\/v1\/orders(.*)/ , methods: ['GET', 'OPTIONS'] }, 
             `${api}/users/login`,
             `${api}/users/register`,
         ]
-    })
+    });
 }
 async function isRevoked(req, payload, done) {
     if (!payload.isAdmin) {

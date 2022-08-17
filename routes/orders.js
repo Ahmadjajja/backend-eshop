@@ -8,7 +8,9 @@ const router = express.Router();
 
 router.get(`/`, async (req, res) => {
     console.log("get request is working")
-    const orderList = await Order.find().populate("user", "name").sort({ 'dateOrdered': -1 }); //populate function will return the whole detail of users(this will return name coz 2nd parameter is name)
+    const orderList = await Order.find()
+        .populate("user", "name")
+        .sort({ 'dateOrdered': -1 }); //populate function will return the whole detail of users(this will return name coz 2nd parameter is name)
     //above sort method means that order them from newest to oldest 
     if (!orderList) {
         res.status(500).json({ success: false })
@@ -23,8 +25,10 @@ router.get(`/:id`, async (req, res) => { //Conclusion: Population concept is ver
         .populate("user", "name") //populate function will return the whole detail of users(this will return name coz 2nd parameter is name)
         //.populate("orderItems");//populate function will return the whole detail of orderItems in Array in from of object
         .populate({
-            path: 'orderItems', populate: {
-                path: 'product', populate: 'category'
+            path: 'orderItems',
+            populate: {
+                path: 'product',
+                populate: 'category',
             }
         }) //this will return product key from orderItems from id's. 
     //VERY IMPORTANT: above code contains all the information about order
@@ -38,25 +42,31 @@ router.get(`/:id`, async (req, res) => { //Conclusion: Population concept is ver
 
 router.post(`/`, async (req, res) => {
     console.log("post request is working")
-    const orderItemsIds = Promise.all(req.body.orderItems.map(async orderItem => {
-        let newOrderItem = new OrderItem({
-            quantity: orderItem.quantity,
-            product: orderItem.product
-        })
+    const orderItemsIds = Promise.all(
+        req.body.orderItems.map(async (orderItem) => {
+            let newOrderItem = new OrderItem({
+                quantity: orderItem.quantity,
+                product: orderItem.product,
+            })
 
-        newOrderItem = await newOrderItem.save();
+            newOrderItem = await newOrderItem.save();
 
-        return newOrderItem._id;
-    }))
+            return newOrderItem._id;
+        }))
     const orderItemsIdsResolved = await orderItemsIds;
     console.log(orderItemsIdsResolved);
 
     //sending total price from frontend is not a good practice 
-    const totalPrices = await Promise.all(orderItemsIdsResolved.map(async (orderItemId) => {
-        const orderItem = await OrderItem.findById(orderItemId).populate('product', 'price');
-        const totalPrice = orderItem.product.price * orderItem.quantity;
-        return totalPrice;
-    }))
+    const totalPrices = await Promise.all(
+        orderItemsIdsResolved.map(async (orderItemId) => {
+            const orderItem = await OrderItem.findById(orderItemId).populate(
+                'product',
+                'price'
+            );
+            const totalPrice = orderItem.product.price * orderItem.quantity;
+
+            return totalPrice;
+        }))
 
     console.log(totalPrices)
 
@@ -84,7 +94,7 @@ router.post(`/`, async (req, res) => {
     if (!order)
         return res.status(404).send('the order cannot be created!')
 
-    res.status(200);
+    res.status(200).send(order);
 })
 
 //updating order status
@@ -100,7 +110,7 @@ router.put(`/:id`, async (req, res) => {
     )
 
     if (!order)
-        return res.status(404).send('the order cannot be updated!')
+        return res.status(404).send('the order cannot be updated!');
 
     res.send(order);
 })
@@ -108,7 +118,8 @@ router.put(`/:id`, async (req, res) => {
 //deleting order status
 
 router.delete(`/:id`, async (req, res) => {
-    Order.findByIdAndRemove(req.params.id).then(async order => {  //very interesting logic used here
+    Order.findByIdAndRemove(req.params.id)
+    .then(async order => {  //very interesting logic used here
         if (order) {
             await order.orderItems.map(async orderItem => {
                 await OrderItem.findByIdAndRemove(orderItem)  //(orderItem) => means orderItem is id coz in database there are stored id's of orderItems.
@@ -128,8 +139,8 @@ router.delete(`/:id`, async (req, res) => {
 
 router.get(`/get/totalsales`, async (req, res) => {
     const totalSales = await Order.aggregate([
-        { $group: { _id: null, totalSales: { $sum: '$totalPrice' } } }  //$sum is reserved word in mongoose
-    ])
+        { $group: { _id: null, totalSales: { $sum: '$totalPrice' } } },  //$sum is reserved word in mongoose
+    ]);
 
     if (!totalSales) {
         return res.status(400).send('The Order sales cannot be generated')
@@ -161,9 +172,11 @@ router.get(`/get/userorders/:userid`, async (req, res) => {
     console.log("get request is working")
     const userOrderList = await Order.find({ user: req.params.userid })
         .populate({
-            path: 'orderItems', populate: {
-                path: 'product', populate: 'category'
-            }
+            path: 'orderItems',
+            populate: {
+                path: 'product',
+                populate: 'category',
+            },
         }) //this will return product key from orderItems from id's. 
         .sort({ 'dateOrdered': -1 }); //populate function will return the whole detail of users(this will return name coz 2nd parameter is name)
     //above sort method means that order them from newest to oldest 

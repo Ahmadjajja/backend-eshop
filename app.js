@@ -1,5 +1,6 @@
 const express = require("express"); //famous library to host server from node js
 const app = express();
+// const bodyParser = require("body-parser");
 const morgan = require("morgan"); //this library is middle ware library 
 const mongoose = require("mongoose");
 const cors = require("cors"); //confusion 1
